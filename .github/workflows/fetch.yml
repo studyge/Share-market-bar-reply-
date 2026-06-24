@@ -1,0 +1,53 @@
+name: Fetch Market Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: 'Single Symbol to Fetch (e.g. NIFTY)'
+        required: false
+        default: ''
+      group:
+        description: 'Group of Symbols (e.g. nifty50, sector_bank)'
+        required: false
+        default: ''
+      interval:
+        description: 'Timeframe Interval (e.g. 15m, 1h, 1d)'
+        required: true
+        default: '15m'
+
+jobs:
+  fetch_data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas
+          pip install --upgrade --no-cache-dir git+https://github.com/StreamAlpha/tvdatafeed.git
+
+      - name: Fetch Data
+        run: |
+          python scripts/fetch_tv.py \
+            ${{ github.event.inputs.symbol && format('--symbol {0}', github.event.inputs.symbol) || '' }} \
+            ${{ github.event.inputs.group && format('--group {0}', github.event.inputs.group) || '' }} \
+            --interval ${{ github.event.inputs.interval }}
+
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add public/data/
+          git commit -m "Update market data: ${{ github.event.inputs.symbol }} ${{ github.event.inputs.group }}" || echo "No changes to commit"
+          git push
