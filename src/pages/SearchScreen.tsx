@@ -72,7 +72,8 @@ export function SearchScreen() {
     const pat = localStorage.getItem('github_pat') || prompt('Enter your GitHub Personal Access Token (with repo access) to trigger the cloud import:');
     if (!pat) return;
     
-    const ownerRepo = prompt('Enter your GitHub Owner/Repo (e.g. username/sharemarket):', localStorage.getItem('github_repo') || '');
+    // Using the default repository provided by the user
+    const ownerRepo = prompt('Enter your GitHub Owner/Repo:', localStorage.getItem('github_repo') || 'studyge/Share-market-bar-reply-');
     if (!ownerRepo) return;
     
     localStorage.setItem('github_pat', pat);
